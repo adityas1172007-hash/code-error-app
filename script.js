@@ -1,11 +1,10 @@
-// ==================== GEMINI API CONFIGURATION ====================
-// ⚠️ IMPORTANT: Replace with your actual Gemini API key before using
-const GEMINI_API_KEY = "YOUR_API_KEY_HERE";  // <-- Paste your valid API key here
+// ==================== GEMINI API KEY (from your image) ====================
+const GEMINI_API_KEY = "AQ.Ab8RN6ImuFGUB8VsH0OrxqoOOVjXiEKY8qZyL5l6aa7-wXeZ3w";
 
 // ==================== MONACO EDITOR INITIALIZATION ====================
 let editor = null;
 
-// Default buggy Python code (syntax error + logical demo)
+// Default buggy Python code (missing colon)
 const defaultPythonCode = `def calculate_average(numbers):
     total = 0
     # BUG: missing colon ':' after 'for num in numbers'
@@ -21,7 +20,7 @@ print(f"Class average: {result}")
 print("Calculation finished")
 `;
 
-// Configure Monaco loader and create editor
+// Configure Monaco loader
 require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
 
 require(['vs/editor/editor.main'], function() {
@@ -35,183 +34,115 @@ require(['vs/editor/editor.main'], function() {
             fontSize: 14,
             fontFamily: 'Consolas, "Courier New", monospace',
             minimap: { enabled: true },
-            scrollBeyondLastLine: false,
-            lineNumbers: 'on',
-            renderWhitespace: 'selection'
+            lineNumbers: 'on'
         });
-        console.log('✅ Monaco Editor initialized with Python code');
+        console.log('✅ Monaco Editor ready');
     } else {
-        console.error('❌ Editor container (#editor-container) not found');
+        console.error('❌ Editor container not found');
     }
 });
 
 // ==================== UI ELEMENTS ====================
-const analyzeBtn = document.getElementById('analyze-btn');
+const analyzeBtn = document.getElementById('analyzeBtn');
 const loadingStatus = document.getElementById('loading-status');
 const errorDisplay = document.getElementById('error-display');
 const explanationList = document.getElementById('explanation-display');
 
-// Helper: Clear previous AI results
-function clearResults() {
-    if (errorDisplay) {
-        const errorMsgP = errorDisplay.querySelector('.error-message-placeholder');
-        if (errorMsgP) errorMsgP.textContent = '';
-    }
-    if (explanationList) {
-        explanationList.innerHTML = '';
-    }
-}
-
-// Helper: Show loading spinner, hide previous content
 function showLoading() {
     if (loadingStatus) loadingStatus.classList.remove('hidden');
-    clearResults();
+    if (errorDisplay) errorDisplay.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Analyzing...';
+    if (explanationList) explanationList.innerHTML = '<li><i class="fas fa-spinner fa-pulse"></i> AI is generating step‑by‑step guide...</li>';
 }
 
-// Helper: Hide loading spinner
 function hideLoading() {
     if (loadingStatus) loadingStatus.classList.add('hidden');
 }
 
-// Helper: Display error type and step‑by‑step explanation
-function displayAnalysisResult(errorType, explanationArray) {
-    // Update error type section
-    if (errorDisplay) {
-        const errorMsgP = errorDisplay.querySelector('.error-message-placeholder');
-        if (errorMsgP) {
-            errorMsgP.textContent = errorType || 'Unknown error';
-        }
-    }
-    // Populate explanation list
-    if (explanationList && Array.isArray(explanationArray)) {
+function displayResults(errorType, explanationSteps) {
+    if (errorDisplay) errorDisplay.innerHTML = errorType || 'Unknown error';
+    if (explanationList) {
         explanationList.innerHTML = '';
-        explanationArray.forEach(step => {
-            const li = document.createElement('li');
-            li.textContent = step;
-            explanationList.appendChild(li);
-        });
-    } else if (explanationList) {
-        explanationList.innerHTML = '<li>⚠️ No step‑by‑step explanation received.</li>';
+        if (Array.isArray(explanationSteps) && explanationSteps.length) {
+            explanationSteps.forEach(step => {
+                const li = document.createElement('li');
+                li.textContent = step;
+                explanationList.appendChild(li);
+            });
+        } else {
+            explanationList.innerHTML = '<li>⚠️ No detailed explanation received.</li>';
+        }
     }
 }
 
-// Helper: Show error message in UI when API fails
-function showFetchError(message) {
-    if (errorDisplay) {
-        const errorMsgP = errorDisplay.querySelector('.error-message-placeholder');
-        if (errorMsgP) {
-            errorMsgP.textContent = `⚠️ API Error: ${message}`;
-        }
-    }
-    if (explanationList) {
-        explanationList.innerHTML = '<li>❌ Failed to analyze code. Check console or API key.</li>';
-    }
+function displayError(errMsg) {
+    if (errorDisplay) errorDisplay.innerHTML = `⚠️ API Error: ${errMsg}`;
+    if (explanationList) explanationList.innerHTML = '<li>❌ Could not analyze code. Check console or API key.</li>';
 }
 
 // ==================== GEMINI API CALL ====================
-async function analyzeCodeWithGemini(codeSnippet) {
-    // System prompt as required (strict JSON output)
+async function callGeminiAPI(code) {
     const systemInstruction = {
         parts: [{ text: `You are a strict coding tutor. Analyze the provided code for errors. Return ONLY a valid JSON object without any markdown. The JSON must follow this structure: {"error_type": "string", "step_by_step_explanation": ["string", "string"]}.` }]
     };
-
     const userMessage = {
-        parts: [{ text: `Here is the Python code to analyze:\n\n${codeSnippet}` }]
+        parts: [{ text: `Python code:\n\n${code}` }]
     };
-
     const requestBody = {
         system_instruction: systemInstruction,
-        contents: [
-            {
-                role: "user",
-                parts: userMessage.parts
-            }
-        ],
-        generationConfig: {
-            temperature: 0.2,
-            topP: 0.9,
-        }
+        contents: [{ role: "user", parts: userMessage.parts }],
+        generationConfig: { temperature: 0.2, topP: 0.9 }
     };
-
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestBody)
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`API responded with ${response.status}: ${errorData.error?.message || 'Unknown error'}`);
-        }
-
-        const data = await response.json();
-
-        // Extract the text content from Gemini response
-        const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!generatedText) {
-            throw new Error('Empty response from Gemini');
-        }
-
-        // Clean potential markdown fences (just in case, though system prompt asks not to)
-        let cleanJson = generatedText.trim();
-        if (cleanJson.startsWith('```json')) {
-            cleanJson = cleanJson.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-        } else if (cleanJson.startsWith('```')) {
-            cleanJson = cleanJson.replace(/```\n?/g, '');
-        }
-
-        const parsed = JSON.parse(cleanJson);
-        // Validate expected structure
-        if (typeof parsed.error_type !== 'string' || !Array.isArray(parsed.step_by_step_explanation)) {
-            throw new Error('Invalid JSON structure from AI');
-        }
-        return parsed;
-    } catch (err) {
-        console.error('Gemini API error:', err);
-        throw err;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+    });
+    if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(`HTTP ${response.status}: ${errData.error?.message || 'Unknown error'}`);
     }
+    const data = await response.json();
+    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!generatedText) throw new Error('Empty response from Gemini');
+
+    // Clean potential markdown fences
+    let clean = generatedText.trim();
+    if (clean.startsWith('```json')) clean = clean.replace(/```json\n?/, '').replace(/```\n?/, '');
+    else if (clean.startsWith('```')) clean = clean.replace(/```\n?/g, '');
+
+    const parsed = JSON.parse(clean);
+    if (typeof parsed.error_type !== 'string' || !Array.isArray(parsed.step_by_step_explanation)) {
+        throw new Error('Invalid JSON structure from AI');
+    }
+    return parsed;
 }
 
 // ==================== BUTTON CLICK HANDLER ====================
 if (analyzeBtn) {
     analyzeBtn.addEventListener('click', async () => {
-        // Guard: ensure editor is ready
         if (!editor) {
-            console.warn('Monaco editor not ready yet.');
-            showFetchError('Editor not initialized');
+            displayError('Editor not ready. Please wait a moment.');
             return;
         }
-
-        // 1. Show loading UI
-        showLoading();
-
-        // 2. Get code from Monaco
         const currentCode = editor.getValue();
-        console.log('📟 [code ERROR] Extracted Code for Gemini:');
-        console.log(currentCode);
-        console.log(`📊 Code length: ${currentCode.length} characters`);
+        console.log('🔍 Code sent to Gemini:\n', currentCode);
 
-        // 3. Call Gemini API
+        showLoading();
         try {
-            const result = await analyzeCodeWithGemini(currentCode);
-            // 4. Update UI with results
-            displayAnalysisResult(result.error_type, result.step_by_step_explanation);
-        } catch (error) {
-            console.error('Analysis failed:', error);
-            showFetchError(error.message || 'Could not analyze code');
+            const result = await callGeminiAPI(currentCode);
+            displayResults(result.error_type, result.step_by_step_explanation);
+        } catch (err) {
+            console.error('Gemini error:', err);
+            displayError(err.message);
         } finally {
-            // 5. Hide loading indicator
             hideLoading();
         }
     });
 } else {
-    console.error('❌ Analyze button (#analyze-btn) not found');
+    console.error('❌ Analyze button (#analyzeBtn) not found');
 }
 
-// Initially hide loading status (it's hidden by CSS class)
+// Initially hide loading status
 if (loadingStatus) loadingStatus.classList.add('hidden');
