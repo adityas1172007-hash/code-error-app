@@ -1,0 +1,253 @@
+/* ================= RESET & GLOBAL ================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+  line-height: 1.5;
+}
+
+/* ================= HEADER (VS Code style) ================= */
+header {
+  background-color: #252526;
+  border-bottom: 1px solid #3c3c3c;
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.app-name {
+  background: linear-gradient(135deg, #e5e5e5, #cccccc);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  letter-spacing: -0.3px;
+}
+
+.logo-area i {
+  color: #007acc;
+  font-size: 1.3rem;
+}
+
+#analyze-btn {
+  background-color: #0e639c;
+  border: none;
+  color: white;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 8px 20px;
+  border-radius: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  letter-spacing: 0.3px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+#analyze-btn i {
+  font-size: 0.9rem;
+}
+
+#analyze-btn:hover {
+  background-color: #1177bb;
+  transform: translateY(-1px);
+}
+
+#analyze-btn:active {
+  background-color: #0b5482;
+  transform: translateY(1px);
+}
+
+/* ================= MAIN LAYOUT (Split screen) ================= */
+main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  background-color: #1e1e1e;
+}
+
+/* left editor container (60%) */
+#editor-container {
+  flex: 0 0 60%;
+  width: 60%;
+  border-right: 1px solid #3c3c3c;
+  background-color: #1e1e1e;
+  position: relative;
+}
+
+/* right output container (40%) */
+#output-container {
+  flex: 0 0 40%;
+  width: 40%;
+  background-color: #1e1e1e;
+  padding: 20px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ================= OUTPUT PANEL ELEMENTS ================= */
+
+/* Loading status - hidden by default */
+.loading {
+  background-color: #2d2d2d;
+  border-left: 4px solid #007acc;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #9cdcfe;
+  margin-bottom: 8px;
+}
+
+.loading i {
+  font-size: 1.1rem;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Error Type card */
+.error-card {
+  background-color: #2d2d2d;
+  border-radius: 12px;
+  border-left: 4px solid #f48771;
+  padding: 16px 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.error-card h3 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 600;
+  color: #f48771;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.error-card h3 i {
+  font-size: 1rem;
+}
+
+.error-message-placeholder {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: #d4d4d4;
+  background-color: #1e1e1e;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #3c3c3c;
+  margin-top: 4px;
+}
+
+/* Step-by-step explanation section */
+.explanation-section {
+  background-color: #252526;
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.explanation-section h3 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 600;
+  color: #9cdcfe;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#explanation-display {
+  list-style-type: none;
+  padding-left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#explanation-display li {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  padding: 8px 12px;
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  border: 1px solid #3c3c3c;
+  color: #cccccc;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.placeholder-li {
+  color: #858585;
+  font-style: italic;
+}
+
+/* Custom scrollbar for output container (VS Code style) */
+#output-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+#output-container::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+#output-container::-webkit-scrollbar-thumb {
+  background: #424242;
+  border-radius: 6px;
+}
+
+#output-container::-webkit-scrollbar-thumb:hover {
+  background: #5a5a5a;
+}
+
+/* Small responsive fallback: avoid break on narrow screens */
+@media (max-width: 700px) {
+  main {
+    flex-direction: column;
+  }
+  #editor-container,
+  #output-container {
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 50%;
+  }
+  #editor-container {
+    border-right: none;
+    border-bottom: 1px solid #3c3c3c;
+  }
+  header {
+    padding: 0 16px;
+  }
+}
