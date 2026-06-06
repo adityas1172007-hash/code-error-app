@@ -4,9 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>code ERROR · AI Coding Tutor</title>
-  <!-- Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <!-- CodeMirror (lightweight, mobile-friendly) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/material-darker.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
@@ -220,10 +218,10 @@
 </div>
 
 <script>
-  // ==================== 🔑 YOUR GEMINI API KEY (replace if needed) ====================
+  // तुम्हारी API Key
   const GEMINI_API_KEY = "AQ.Ab8RN6ImuFGUB8VsH0OrxqoOOVjXiEKY8qZyL5l6aa7-wXeZ3w";
 
-  // ==================== SETUP CODEMIRROR (mobile-friendly) ====================
+  // ==================== SETUP CODEMIRROR ====================
   const buggyCode = `def calculate_average(numbers):
     total = 0
     # BUG: missing colon ':' after 'for num in numbers'
@@ -249,7 +247,6 @@ print(f"Class average: {result}")
     viewportMargin: Infinity
   });
   editor.setValue(buggyCode);
-  // Force resize on mobile
   setTimeout(() => editor.refresh(), 100);
 
   // ==================== UI ELEMENTS ====================
@@ -284,32 +281,44 @@ print(f"Class average: {result}")
     explanationUl.innerHTML = '<li>❌ Analysis failed. Check console or API key.</li>';
   }
 
-  // ==================== GEMINI API ====================
+  // ==================== GEMINI API (FIXED LOGIC) ====================
   async function callGemini(code) {
-    const systemPrompt = `You are a strict coding tutor. Analyze the provided code for errors. Return ONLY a valid JSON object without any markdown. The JSON must follow: {"error_type": "string", "step_by_step_explanation": ["string", "string"]}.`;
+    const systemPrompt = `You are a strict coding tutor. Analyze the provided code for errors. Return ONLY a valid JSON object. The JSON must follow: {"error_type": "string", "step_by_step_explanation": ["string", "string"]}.`;
+    
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    
     const payload = {
-      system_instruction: { parts: [{ text: systemPrompt }] },
+      systemInstruction: { parts: [{ text: systemPrompt }] }, // FIX 1: camelCase used here
       contents: [{ role: "user", parts: [{ text: `Python code:\n${code}` }] }],
-      generationConfig: { temperature: 0.2 }
+      generationConfig: { 
+        temperature: 0.2,
+        responseMimeType: "application/json" // FIX 2: Enforces JSON output from Gemini
+      }
     };
+
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
+
     if (!res.ok) {
       const err = await res.json();
       throw new Error(err.error?.message || `HTTP ${res.status}`);
     }
+
     const data = await res.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    
     if (!text) throw new Error('Empty response');
-    let clean = text.trim();
-    if (clean.startsWith('```json')) clean = clean.replace(/```json\n?/, '').replace(/```\n?/, '');
-    else if (clean.startsWith('```')) clean = clean.replace(/```\n?/g, '');
-    const parsed = JSON.parse(clean);
-    if (!parsed.error_type || !Array.isArray(parsed.step_by_step_explanation)) throw new Error('Invalid JSON');
+
+    // FIX 3: Direct JSON parse because we forced application/json
+    const parsed = JSON.parse(text);
+    
+    if (!parsed.error_type || !Array.isArray(parsed.step_by_step_explanation)) {
+        throw new Error('Invalid JSON structure');
+    }
+    
     return parsed;
   }
 
@@ -322,7 +331,7 @@ print(f"Class average: {result}")
       const result = await callGemini(currentCode);
       displayResults(result.error_type, result.step_by_step_explanation);
     } catch (err) {
-      console.error(err);
+      console.error("API Fetch Error: ", err);
       displayError(err.message);
     } finally {
       hideLoading();
