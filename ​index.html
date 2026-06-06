@@ -2,56 +2,429 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>code ERROR · AI Coding Tutor</title>
-  
-  <!-- Monaco Editor CDN (loader) -->
-  <link rel="stylesheet" data-name="vs/editor/editor.main" href="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/editor/editor.main.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
-  
-  <!-- FontAwesome CDN (icons) -->
+  <!-- Font Awesome 6 (icons) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  
-  <!-- External styles & scripts (Separation of Concerns) -->
-  <link rel="stylesheet" href="style.css">
-  <script defer src="script.js"></script>
+  <!-- Monaco Editor CSS (loader will fetch the rest) -->
+  <link rel="stylesheet" data-name="vs/editor/editor.main" href="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/editor/editor.main.min.css">
+  <style>
+    /* ---------- RESET & GLOBAL ---------- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      background-color: #1e1e1e;
+      color: #d4d4d4;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---------- HEADER (VS Code style) ---------- */
+    .header {
+      background-color: #252526;
+      border-bottom: 1px solid #3c3c3c;
+      padding: 0 20px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .logo {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    .logo i {
+      color: #007acc;
+      font-size: 1.3rem;
+    }
+    .app-name {
+      background: linear-gradient(135deg, #ffffff, #9cdcfe);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    .analyze-btn {
+      background: #0e639c;
+      border: none;
+      color: white;
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 8px 20px;
+      border-radius: 32px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.2s;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    .analyze-btn:hover {
+      background: #1177bb;
+      transform: translateY(-1px);
+    }
+    .analyze-btn:active {
+      background: #0b5482;
+      transform: translateY(1px);
+    }
+
+    /* ---------- MAIN SPLIT LAYOUT ---------- */
+    .main-split {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      min-height: 0;  /* flex children can shrink */
+    }
+
+    /* Editor panel (60%) */
+    .editor-panel {
+      flex: 0 0 60%;
+      width: 60%;
+      display: flex;
+      flex-direction: column;
+      background: #1e1e1e;
+      border-right: 1px solid #3c3c3c;
+      overflow: hidden;
+    }
+    .editor-header {
+      background: #252526;
+      padding: 8px 16px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      color: #cccccc;
+      border-bottom: 1px solid #2d2d2d;
+      display: flex;
+      gap: 12px;
+    }
+    .editor-header span {
+      background: #2d2d2d;
+      padding: 2px 10px;
+      border-radius: 20px;
+    }
+    #editor-container {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+    }
+
+    /* Output panel (40%) */
+    .output-panel {
+      flex: 0 0 40%;
+      width: 40%;
+      background: #1e1e1e;
+      overflow-y: auto;
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Output cards */
+    .error-card {
+      background: #252526;
+      border-left: 4px solid #f48771;
+      border-radius: 12px;
+      padding: 16px 20px;
+    }
+    .error-card h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #f48771;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .error-message {
+      font-family: 'Consolas', 'Courier New', monospace;
+      background: #1e1e1e;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #3c3c3c;
+      font-size: 0.9rem;
+      word-break: break-word;
+    }
+
+    .explanation-section {
+      background: #252526;
+      border-radius: 12px;
+      padding: 16px 20px;
+    }
+    .explanation-section h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #9cdcfe;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #explanation-display {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    #explanation-display li {
+      background: #1e1e1e;
+      border: 1px solid #3c3c3c;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+
+    .loading-status {
+      background: #2d2d2d;
+      border-left: 4px solid #007acc;
+      padding: 12px 16px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 500;
+    }
+    .hidden {
+      display: none !important;
+    }
+
+    /* Scrollbar */
+    .output-panel::-webkit-scrollbar {
+      width: 6px;
+    }
+    .output-panel::-webkit-scrollbar-track {
+      background: #1e1e1e;
+    }
+    .output-panel::-webkit-scrollbar-thumb {
+      background: #555;
+      border-radius: 8px;
+    }
+
+    /* ---------- RESPONSIVE (mobile) ---------- */
+    @media (max-width: 750px) {
+      .main-split {
+        flex-direction: column;
+      }
+      .editor-panel, .output-panel {
+        flex: 1 1 auto;
+        width: 100%;
+        min-height: 50%;
+      }
+      .editor-panel {
+        border-right: none;
+        border-bottom: 1px solid #3c3c3c;
+      }
+      .header {
+        padding: 0 12px;
+      }
+      .analyze-btn {
+        padding: 6px 14px;
+        font-size: 0.75rem;
+      }
+      .output-panel {
+        padding: 16px;
+      }
+    }
+  </style>
 </head>
 <body>
-  <header>
-    <div class="logo-area">
-      <span class="app-name">code ERROR</span>
-      <i class="fas fa-code"></i>
-    </div>
-    <button id="analyze-btn">
-      <i class="fas fa-magic"></i> Analyze & Fix Code
-    </button>
-  </header>
+<div class="header">
+  <div class="logo">
+    <i class="fas fa-code"></i>
+    <span class="app-name">code ERROR</span>
+  </div>
+  <button class="analyze-btn" id="analyzeBtn">
+    <i class="fas fa-magic"></i> Analyze & Fix Code
+  </button>
+</div>
 
-  <main class="split-layout">
-    <!-- Left panel: Monaco Editor injection point -->
-    <div id="editor-container" class="editor-pane"></div>
-
-    <!-- Right panel: AI output and explanations -->
-    <div id="output-container" class="output-pane">
-      <!-- Hidden loading status (default hidden) -->
-      <div id="loading-status" class="loading hidden">
-        <i class="fas fa-spinner fa-pulse"></i> Analyzing your code...
-      </div>
-      
-      <!-- Error type display -->
-      <div id="error-display" class="error-card">
-        <h3><i class="fas fa-bug"></i> Error Type</h3>
-        <p class="error-message-placeholder">— Waiting for analysis —</p>
-      </div>
-      
-      <!-- Step-by-step explanation list -->
-      <div class="explanation-section">
-        <h3><i class="fas fa-list-ol"></i> Step-by-Step Explanation</h3>
-        <ul id="explanation-display">
-          <li class="placeholder-li">Click "Analyze & Fix Code" to see AI insights</li>
-        </ul>
-      </div>
+<div class="main-split">
+  <!-- LEFT: Monaco Editor -->
+  <div class="editor-panel">
+    <div class="editor-header">
+      <span><i class="fab fa-python"></i> Python · buggy snippet</span>
+      <span><i class="fas fa-exclamation-triangle"></i> missing colon (syntax error)</span>
     </div>
-  </main>
+    <div id="editor-container"></div>
+  </div>
+
+  <!-- RIGHT: AI Output Panel -->
+  <div class="output-panel">
+    <div id="loading-status" class="loading-status hidden">
+      <i class="fas fa-spinner fa-pulse"></i> Gemini AI is analyzing your code...
+    </div>
+
+    <div class="error-card">
+      <h3><i class="fas fa-bug"></i> Error Type</h3>
+      <div id="error-display" class="error-message">— Waiting for analysis —</div>
+    </div>
+
+    <div class="explanation-section">
+      <h3><i class="fas fa-list-ol"></i> Step‑by‑Step Explanation</h3>
+      <ul id="explanation-display">
+        <li>Click "Analyze & Fix Code" to get AI insights</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Monaco Loader -->
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+<script>
+  // ==================== 🔑 REPLACE WITH YOUR ACTUAL GEMINI API KEY ====================
+  const GEMINI_API_KEY = "YOUR_API_KEY_HERE";   // <----- PASTE YOUR KEY HERE
+
+  // ==================== MONACO EDITOR INIT ====================
+  let editor = null;
+  const dummyBuggyCode = `def calculate_average(numbers):
+    total = 0
+    # BUG: missing colon ':' after 'for num in numbers'
+    for num in numbers
+        total += num
+    average = total / len(numbers)
+    return average
+
+# Test the function
+scores = [85, 92, 78, 90, 88]
+result = calculate_average(scores)
+print(f"Class average: {result}")
+print("Calculation finished")
+`;
+
+  require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
+  require(['vs/editor/editor.main'], function() {
+    const container = document.getElementById('editor-container');
+    if (container) {
+      editor = monaco.editor.create(container, {
+        value: dummyBuggyCode,
+        language: 'python',
+        theme: 'vs-dark',
+        automaticLayout: true,
+        fontSize: 14,
+        fontFamily: 'Consolas, "Courier New", monospace',
+        minimap: { enabled: true },
+        lineNumbers: 'on'
+      });
+      console.log("✅ Monaco editor ready");
+    } else {
+      console.error("Editor container missing");
+    }
+  });
+
+  // ==================== UI ELEMENTS & HELPERS ====================
+  const loadingDiv = document.getElementById('loading-status');
+  const errorDisplayDiv = document.getElementById('error-display');
+  const explanationUl = document.getElementById('explanation-display');
+  const analyzeButton = document.getElementById('analyzeBtn');
+
+  function showLoading() {
+    if (loadingDiv) loadingDiv.classList.remove('hidden');
+    errorDisplayDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Analyzing...';
+    explanationUl.innerHTML = '<li><i class="fas fa-spinner fa-pulse"></i> AI is generating step‑by‑step guide...</li>';
+  }
+
+  function hideLoading() {
+    if (loadingDiv) loadingDiv.classList.add('hidden');
+  }
+
+  function displayResults(errorType, explanationSteps) {
+    errorDisplayDiv.innerHTML = errorType || "Unknown error";
+    explanationUl.innerHTML = "";
+    if (Array.isArray(explanationSteps) && explanationSteps.length) {
+      explanationSteps.forEach(step => {
+        const li = document.createElement('li');
+        li.textContent = step;
+        explanationUl.appendChild(li);
+      });
+    } else {
+      explanationUl.innerHTML = "<li>⚠️ No detailed explanation received.</li>";
+    }
+  }
+
+  function displayError(errMsg) {
+    errorDisplayDiv.innerHTML = `⚠️ API Error: ${errMsg}`;
+    explanationUl.innerHTML = '<li>❌ Could not analyze code. Check console or API key.</li>';
+  }
+
+  // ==================== GEMINI API CALL ====================
+  async function callGeminiAPI(code) {
+    const systemInstruction = {
+      parts: [{ text: `You are a strict coding tutor. Analyze the provided code for errors. Return ONLY a valid JSON object without any markdown. The JSON must follow this structure: {"error_type": "string", "step_by_step_explanation": ["string", "string"]}.` }]
+    };
+    const userMessage = {
+      parts: [{ text: `Python code:\n\n${code}` }]
+    };
+    const requestBody = {
+      system_instruction: systemInstruction,
+      contents: [{ role: "user", parts: userMessage.parts }],
+      generationConfig: { temperature: 0.2, topP: 0.9 }
+    };
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody)
+    });
+    if (!response.ok) {
+      const errData = await response.json();
+      throw new Error(`HTTP ${response.status}: ${errData.error?.message || 'Unknown error'}`);
+    }
+    const data = await response.json();
+    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!generatedText) throw new Error("Empty response from Gemini");
+    
+    // Clean markdown fences if any
+    let clean = generatedText.trim();
+    if (clean.startsWith('```json')) clean = clean.replace(/```json\n?/, '').replace(/```\n?/, '');
+    else if (clean.startsWith('```')) clean = clean.replace(/```\n?/g, '');
+    
+    const parsed = JSON.parse(clean);
+    if (typeof parsed.error_type !== 'string' || !Array.isArray(parsed.step_by_step_explanation)) {
+      throw new Error('Invalid JSON structure from AI');
+    }
+    return parsed;
+  }
+
+  // ==================== BUTTON CLICK HANDLER ====================
+  if (analyzeButton) {
+    analyzeButton.addEventListener('click', async () => {
+      if (!editor) {
+        displayError("Editor not ready. Please wait a moment.");
+        return;
+      }
+      const currentCode = editor.getValue();
+      console.log("🔍 Code sent to Gemini:\n", currentCode);
+      
+      showLoading();
+      try {
+        const result = await callGeminiAPI(currentCode);
+        displayResults(result.error_type, result.step_by_step_explanation);
+      } catch (err) {
+        console.error("Gemini error:", err);
+        displayError(err.message);
+      } finally {
+        hideLoading();
+      }
+    });
+  } else {
+    console.error("Analyze button not found");
+  }
+</script>
 </body>
 </html>
