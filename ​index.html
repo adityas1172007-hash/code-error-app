@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>code ERROR · AI Coding Tutor</title>
+  
+  <!-- Monaco Editor CDN (loader) -->
+  <link rel="stylesheet" data-name="vs/editor/editor.main" href="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/editor/editor.main.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+  
+  <!-- FontAwesome CDN (icons) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  
+  <!-- External styles & scripts (Separation of Concerns) -->
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <header>
+    <div class="logo-area">
+      <span class="app-name">code ERROR</span>
+      <i class="fas fa-code"></i>
+    </div>
+    <button id="analyze-btn">
+      <i class="fas fa-magic"></i> Analyze & Fix Code
+    </button>
+  </header>
+
+  <main class="split-layout">
+    <!-- Left panel: Monaco Editor injection point -->
+    <div id="editor-container" class="editor-pane"></div>
+
+    <!-- Right panel: AI output and explanations -->
+    <div id="output-container" class="output-pane">
+      <!-- Hidden loading status (default hidden) -->
+      <div id="loading-status" class="loading hidden">
+        <i class="fas fa-spinner fa-pulse"></i> Analyzing your code...
+      </div>
+      
+      <!-- Error type display -->
+      <div id="error-display" class="error-card">
+        <h3><i class="fas fa-bug"></i> Error Type</h3>
+        <p class="error-message-placeholder">— Waiting for analysis —</p>
+      </div>
+      
+      <!-- Step-by-step explanation list -->
+      <div class="explanation-section">
+        <h3><i class="fas fa-list-ol"></i> Step-by-Step Explanation</h3>
+        <ul id="explanation-display">
+          <li class="placeholder-li">Click "Analyze & Fix Code" to see AI insights</li>
+        </ul>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
