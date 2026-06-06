@@ -1,4 +1,3 @@
-/* ================= RESET & GLOBAL ================= */
 * {
   margin: 0;
   padding: 0;
@@ -7,247 +6,227 @@
 
 body {
   height: 100vh;
-  display: flex;
-  flex-direction: column;
+  width: 100vw;
   overflow: hidden;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
   background-color: #1e1e1e;
   color: #d4d4d4;
-  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
-  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
 }
 
-/* ================= HEADER (VS Code style) ================= */
-header {
+/* Header (VS Code style) */
+.header {
   background-color: #252526;
   border-bottom: 1px solid #3c3c3c;
-  padding: 0 24px;
+  padding: 0 20px;
   height: 56px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
 }
-
-.logo-area {
+.logo {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: baseline;
+  gap: 8px;
   font-size: 1.4rem;
-  font-weight: 600;
+  font-weight: 700;
 }
-
-.app-name {
-  background: linear-gradient(135deg, #e5e5e5, #cccccc);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  letter-spacing: -0.3px;
-}
-
-.logo-area i {
+.logo i {
   color: #007acc;
   font-size: 1.3rem;
 }
-
-#analyze-btn {
-  background-color: #0e639c;
+.app-name {
+  background: linear-gradient(135deg, #ffffff, #9cdcfe);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+.analyze-btn {
+  background: #0e639c;
   border: none;
   color: white;
-  font-family: inherit;
+  font-weight: 600;
   font-size: 0.85rem;
-  font-weight: 500;
   padding: 8px 20px;
-  border-radius: 24px;
+  border-radius: 32px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.2s ease;
-  letter-spacing: 0.3px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: 0.2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
-
-#analyze-btn i {
-  font-size: 0.9rem;
-}
-
-#analyze-btn:hover {
-  background-color: #1177bb;
+.analyze-btn:hover {
+  background: #1177bb;
   transform: translateY(-1px);
 }
-
-#analyze-btn:active {
-  background-color: #0b5482;
+.analyze-btn:active {
+  background: #0b5482;
   transform: translateY(1px);
 }
 
-/* ================= MAIN LAYOUT (Split screen) ================= */
-main {
+/* Main split layout */
+.main-split {
   flex: 1;
   display: flex;
   overflow: hidden;
-  background-color: #1e1e1e;
+  min-height: 0;
 }
 
-/* left editor container (60%) */
-#editor-container {
+/* Editor panel (60%) */
+.editor-panel {
   flex: 0 0 60%;
   width: 60%;
+  display: flex;
+  flex-direction: column;
+  background: #1e1e1e;
   border-right: 1px solid #3c3c3c;
-  background-color: #1e1e1e;
-  position: relative;
+  overflow: hidden;
+}
+.editor-header {
+  background: #252526;
+  padding: 8px 16px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  color: #cccccc;
+  border-bottom: 1px solid #2d2d2d;
+  display: flex;
+  gap: 12px;
+}
+.editor-header span {
+  background: #2d2d2d;
+  padding: 2px 10px;
+  border-radius: 20px;
+}
+#editor-container {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
 }
 
-/* right output container (40%) */
-#output-container {
+/* Output panel (40%) */
+.output-panel {
   flex: 0 0 40%;
   width: 40%;
-  background-color: #1e1e1e;
-  padding: 20px 24px;
+  background: #1e1e1e;
   overflow-y: auto;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
-/* ================= OUTPUT PANEL ELEMENTS ================= */
-
-/* Loading status - hidden by default */
-.loading {
-  background-color: #2d2d2d;
-  border-left: 4px solid #007acc;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: #9cdcfe;
-  margin-bottom: 8px;
-}
-
-.loading i {
-  font-size: 1.1rem;
-}
-
-.hidden {
-  display: none !important;
-}
-
-/* Error Type card */
+/* Error card */
 .error-card {
-  background-color: #2d2d2d;
-  border-radius: 12px;
+  background: #252526;
   border-left: 4px solid #f48771;
+  border-radius: 12px;
   padding: 16px 20px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
-
 .error-card h3 {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  font-weight: 600;
+  letter-spacing: 1px;
   color: #f48771;
   margin-bottom: 12px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
-
-.error-card h3 i {
-  font-size: 1rem;
-}
-
-.error-message-placeholder {
+.error-message {
   font-family: 'Consolas', 'Courier New', monospace;
-  font-size: 0.9rem;
-  color: #d4d4d4;
-  background-color: #1e1e1e;
+  background: #1e1e1e;
   padding: 12px;
   border-radius: 8px;
   border: 1px solid #3c3c3c;
-  margin-top: 4px;
+  font-size: 0.9rem;
+  word-break: break-word;
 }
 
-/* Step-by-step explanation section */
+/* Explanation section */
 .explanation-section {
-  background-color: #252526;
+  background: #252526;
   border-radius: 12px;
   padding: 16px 20px;
 }
-
 .explanation-section h3 {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  font-weight: 600;
+  letter-spacing: 1px;
   color: #9cdcfe;
   margin-bottom: 16px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
-
 #explanation-display {
-  list-style-type: none;
-  padding-left: 0;
+  list-style: none;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
-
 #explanation-display li {
-  font-size: 0.9rem;
-  line-height: 1.5;
-  padding: 8px 12px;
-  background-color: #1e1e1e;
-  border-radius: 8px;
+  background: #1e1e1e;
   border: 1px solid #3c3c3c;
-  color: #cccccc;
-  font-family: 'Segoe UI', system-ui, sans-serif;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  line-height: 1.4;
 }
 
-.placeholder-li {
-  color: #858585;
-  font-style: italic;
+/* Loading status */
+.loading-status {
+  background: #2d2d2d;
+  border-left: 4px solid #007acc;
+  padding: 12px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+}
+.hidden {
+  display: none !important;
 }
 
-/* Custom scrollbar for output container (VS Code style) */
-#output-container::-webkit-scrollbar {
-  width: 8px;
+/* Scrollbar */
+.output-panel::-webkit-scrollbar {
+  width: 6px;
 }
-
-#output-container::-webkit-scrollbar-track {
+.output-panel::-webkit-scrollbar-track {
   background: #1e1e1e;
 }
-
-#output-container::-webkit-scrollbar-thumb {
-  background: #424242;
-  border-radius: 6px;
+.output-panel::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 8px;
 }
 
-#output-container::-webkit-scrollbar-thumb:hover {
-  background: #5a5a5a;
-}
-
-/* Small responsive fallback: avoid break on narrow screens */
-@media (max-width: 700px) {
-  main {
+/* Responsive (mobile) */
+@media (max-width: 750px) {
+  .main-split {
     flex-direction: column;
   }
-  #editor-container,
-  #output-container {
+  .editor-panel, .output-panel {
     flex: 1 1 auto;
     width: 100%;
     min-height: 50%;
   }
-  #editor-container {
+  .editor-panel {
     border-right: none;
     border-bottom: 1px solid #3c3c3c;
   }
-  header {
-    padding: 0 16px;
+  .header {
+    padding: 0 12px;
+  }
+  .analyze-btn {
+    padding: 6px 14px;
+    font-size: 0.75rem;
+  }
+  .output-panel {
+    padding: 16px;
   }
 }
